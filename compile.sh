@@ -24,5 +24,6 @@ sudo make install
 sudo update-grub
 
 # success message
-KERNELRELEASE=$(bash cat include/config/kernel.release 2> /dev/null)
+KERNELRELEASE=$(cat include/config/kernel.release 2> /dev/null)
 echo "Kernel ($KERNELRELEASE) install ready, please reboot"
+

@@ -4,7 +4,7 @@
 set -Eeuo pipefail
 
 # user config
-BASE_CONFIG='ubuntu-20.04aws-5.4.config' # URL or relative to script dir
+BASE_CONFIG='ubuntu-22.04-5.15.config' # URL or relative to script dir
 CONF_OUTPUT=".config" # in $PWD
 CONF_NEWDEF=".config.newdef" # in $PWD
 LSMOD_OVERRIDE="lsmod.override" # in $PWD
@@ -155,3 +155,4 @@ set +x
 
 echo "Kernel config is ready"
 echo "Reminder: You may still need to enable custom configs before compile"
+
