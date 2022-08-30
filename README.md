@@ -6,6 +6,12 @@
 
 2. Reboot
 
+### Distrubited Build Script
+
+1. Run [distcompile.sh](distcompile.sh)
+
+2. Reboot
+
 ### Config Script
 
 1. Run [configure.sh](configure.sh)
@@ -142,6 +148,48 @@ This script will also look for these files in `$PWD`:
 - `.config`: Generated config file. The script will write the result into this file. If this file already exists, the script will backup it first.
 
 - `.config.newdef`: Derived new definitions record file. If any config item is not described in the base config file, it's name and default value will be written to this file.
+
+### distcompile.sh
+
+To use this script, you must have `distcc` installed on both client and server first.
+
+It is strongly recommended to compile `distcc` from source. Here is a sample script to do this:
+
+```bash
+sudo apt install -y gcc make python3 python3-dev libiberty-dev autoconf checkinstall
+
+wget https://github.com/distcc/distcc/releases/download/v3.4/distcc-3.4.tar.gz
+tar xf distcc-3.4.tar.gz
+cd distcc-3.4
+
+./autogen.sh
+./configure
+make
+
+sudo checkinstall
+make installcheck
+sudo update-distcc-symlinks
+```
+
+After that, please configure `distcc` host in `~/.ssh/config` and `~/.distcc/hosts`.
+
+Here are some examples:
+
+```
+# ~/.ssh/config
+
+Host distcc.server1
+    HostName 192.168.0.2
+    User distcc
+    IdentityFile ~/.ssh/id_rsa
+```
+
+```
+# ~/.distcc/hosts
+
+localhost/12
+@distcc.server1/36
+```
 
 ### validate.sh
 
