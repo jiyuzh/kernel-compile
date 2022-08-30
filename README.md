@@ -173,6 +173,8 @@ sudo update-distcc-symlinks
 
 After that, please configure `distcc` host in `~/.ssh/config` and `~/.distcc/hosts`.
 
+Please order the hosts in `~/.distcc/hosts` from fastest to slowest. The syntax is `@<ssh_host>/<parallel_allowance>`.
+
 Here are some examples:
 
 ```
