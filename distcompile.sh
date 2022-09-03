@@ -13,6 +13,15 @@ function __error_handing {
 
 trap '__error_handing $? $LINENO' ERR
 
+# file locator
+SOURCE="${BASH_SOURCE[0]:-$0}";
+while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+        DIR="$( cd -P "$( dirname -- "$SOURCE"; )" &> /dev/null && pwd 2> /dev/null; )";
+        SOURCE="$( readlink -- "$SOURCE"; )";
+        [[ $SOURCE != /* ]] && SOURCE="${DIR}/${SOURCE}"; # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+SCRIPT_DIR="$( cd -P "$( dirname -- "$SOURCE"; )" &> /dev/null && pwd 2> /dev/null; )";
+
 # get core count
 NUMCPUS=`distcc -j`
 
@@ -22,6 +31,11 @@ time nice make -j$NUMCPUS CC="distcc" modules
 sudo make modules_install
 sudo make install
 sudo update-grub
+
+# hook vscode
+if [ -d ".vscode" ]; then
+        "$SCRIPT_DIR/vscode.sh"
+fi
 
 # success message
 KERNELRELEASE=$(cat include/config/kernel.release 2> /dev/null)
