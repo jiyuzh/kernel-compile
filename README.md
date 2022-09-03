@@ -228,7 +228,7 @@ This script will also look for these files in `$PWD`:
 
 ### vscode.sh
 
-This script depends on `python-is-python3` to funciton properly.
+This script depends on `python-is-python3` to function properly.
 
 To use this script, you MUST compile the kernel at least once before running it.
 
