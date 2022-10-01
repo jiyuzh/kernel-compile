@@ -25,9 +25,16 @@ SCRIPT_DIR="$( cd -P "$( dirname -- "$SOURCE"; )" &> /dev/null && pwd 2> /dev/nu
 # get core count
 NUMCPUS=`distcc -j`
 
-# compile and install (using all cores)
+# compile kernel (using all cores)
 time nice make -j$NUMCPUS CC="distcc"
 time nice make -j$NUMCPUS CC="distcc" modules
+
+# compile perf
+cd tools/perf
+time nice make -j$NUMCPUS --load-average=$NUMCPUS
+cd ../..
+
+# install kernel
 sudo make modules_install
 sudo make install
 sudo update-grub
