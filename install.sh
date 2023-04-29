@@ -22,23 +22,11 @@ while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 SCRIPT_DIR="$( cd -P "$( dirname -- "$SOURCE"; )" &> /dev/null && pwd 2> /dev/null; )";
 
-# get core count
-NUMCPUS=`grep -c '^processor' /proc/cpuinfo`
-
-# compile kernel (using all cores)
-time nice make -j$NUMCPUS --load-average=$NUMCPUS
-time nice make modules -j$NUMCPUS --load-average=$NUMCPUS
-
-# compile perf
-cd tools/perf
-time nice make -j$NUMCPUS --load-average=$NUMCPUS
-cd ../..
-
-# hook vscode
-if [ -d ".vscode" ]; then
-        "$SCRIPT_DIR/vscode.sh"
-fi
+# install kernel
+sudo make modules_install
+sudo make install
+sudo update-grub
 
 # success message
 KERNELRELEASE=$(cat include/config/kernel.release 2> /dev/null)
-echo "Kernel ($KERNELRELEASE) compile ready, please install"
+echo "Kernel ($KERNELRELEASE) install ready, please reboot"
