@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 'use strict'
 # see https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
-set -Eeuxo pipefail
+set -Euxo pipefail # no -e as we may try to remove non-existent .old file
 
 # failure message
 function __error_handing {
@@ -22,11 +22,35 @@ while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 SCRIPT_DIR="$( cd -P "$( dirname -- "$SOURCE"; )" &> /dev/null && pwd 2> /dev/null; )";
 
-# install kernel
-sudo make modules_install
-sudo make install
+if [ "$#" -ne 1 ]; then
+    echo "Usage: ./uninstall.sh KERNVER"
+fi
+
+KERNVER="$1"
+
+echo "You are about to remove kernel: $KERNVER"
+
+read -p "Are you sure? " -n 1 -r
+if [[ ! $REPLY =~ ^[Yy]$ ]]
+then
+    exit 1
+fi
+
+if [ ! -f "/boot/initrd.img-$KERNVER" ]; then
+    echo "$KERNVER does not exist."
+	exit 1
+fi
+
+sudo rm "/boot/config-$KERNVER"
+sudo rm "/boot/config-$KERNVER.old"
+sudo rm "/boot/initrd.img-$KERNVER"
+sudo rm "/boot/initrd.img-$KERNVER.old"
+sudo rm "/boot/System.map-$KERNVER"
+sudo rm "/boot/System.map-$KERNVER.old"
+sudo rm "/boot/vmlinuz-$KERNVER"
+sudo rm "/boot/vmlinuz-$KERNVER.old"
+sudo rm -rf "/lib/modules/$KERNVER/"
+
 sudo update-grub
 
-# success message
-KERNELRELEASE=$(cat include/config/kernel.release 2> /dev/null)
-echo "Kernel ($KERNELRELEASE) install ready, please reboot"
+echo "Kernel ($KERNVER) uninstalled, please reboot"
