@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+# ext-default-enabled: no
+
 # though not necessary, it is still good to have them
 module_flags \
 	VSOCKETS \
