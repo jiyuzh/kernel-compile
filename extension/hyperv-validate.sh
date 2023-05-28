@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+# ext-default-enabled: no
+
 echo 'Hyper-V Support:'
 
 check_flags \
