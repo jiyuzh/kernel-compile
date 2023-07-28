@@ -2,13 +2,13 @@
 
 ### Build Script
 
-1. Run [compile.sh](compile.sh)
+1. Run [build.sh](build.sh)
 
 2. Reboot
 
 ### Distrubited Build Script
 
-1. Run [distcompile.sh](distcompile.sh)
+1. Run [distbuild.sh](distbuild.sh)
 
 2. Reboot
 

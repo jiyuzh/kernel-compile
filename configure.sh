@@ -46,7 +46,7 @@ LOCALVER="-$1"
 shift
 
 # generate extension list
-EXT_ARGS=( "$@" )
+EXT_ARGS=( "$@" "--with-local" )
 USE_EXTENSION=( $("$SCRIPT_DIR/extension/registry.sh" "$SCRIPT_DIR/extension" "configure" "${EXT_ARGS[@]}") )
 echo "Using configuration extensions: "
 echo "    ${USE_EXTENSION[@]}"

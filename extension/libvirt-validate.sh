@@ -81,3 +81,11 @@ check_flags \
 	NET_SCH_SFQ
 
 echo
+
+echo 'LibVirt Hardware Accelerator:'
+
+check_flags \
+	KVM_INTEL \
+	KVM_AMD
+
+echo
