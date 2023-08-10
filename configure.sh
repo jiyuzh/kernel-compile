@@ -31,9 +31,12 @@ SCRIPT_DIR="$( cd -P "$( dirname -- "$SOURCE"; )" &> /dev/null && pwd 2> /dev/nu
 
 # help message
 if [ "$#" -lt 1 ]; then
-	echo "./configure.sh {{localver_name}} {{ext_args}}"
+	echo "./configure.sh {{localver_name}} [{{config_type}}] {{ext_args}}"
 	echo "Automatic kernel configuration generator for Linux 5.x"
 	echo "    localver_name: Value provided to CONFIG_LOCALVERSION, without leading dash"
+	echo "    config_type: The fullness of the config, the default value is 'lite'"
+	echo "        full: Do not remove unused modules"
+	echo "        lite: Remove modules that are not loaded"
 	echo "    ext_args: A series of arguments tweaking the extension options"
 	echo "              The default is to use all available extensions"
 	echo "        --no-{1}: Exclude extension {1}"
@@ -44,6 +47,16 @@ fi
 # get localver name
 LOCALVER="-$1"
 shift
+
+# get full module type
+CONFIGTYP="lite"
+if [ "$#" -gt 0 ] && [[ "$1" == "full" ]]; then
+	CONFIGTYP="full"
+	shift
+elif [ "$#" -gt 0 ] && [[ "$1" == "lite" ]]; then
+	CONFIGTYP="lite"
+	shift
+fi
 
 # generate extension list
 EXT_ARGS=( "$@" "--with-local" )
@@ -117,12 +130,14 @@ rm "$CONF_OUTPUT.__edit_temp"
 # localize config
 make listnewconfig > "$CONF_NEWDEF"
 make olddefconfig
-if [ -f "$LSMOD_OVERRIDE" ]; then
-	echo "Detected and loaded lsmod override file: $LSMOD_OVERRIDE"
-	make LSMOD="$LSMOD_OVERRIDE" localmodconfig
-else
-	echo "No override file found, using live lsmod output"
-	make localmodconfig
+if [[ "$CONFIGTYP" == "lite" ]]; then
+	if [ -f "$LSMOD_OVERRIDE" ]; then
+		echo "Detected and loaded lsmod override file: $LSMOD_OVERRIDE"
+		make LSMOD="$LSMOD_OVERRIDE" localmodconfig
+	else
+		echo "No override file found, using live lsmod output"
+		make localmodconfig
+	fi
 fi
 echo '+' > .scmversion
 
@@ -130,6 +145,8 @@ echo '+' > .scmversion
 set_flag_str LOCALVERSION "$LOCALVER"
 set_flag_str SYSTEM_TRUSTED_KEYS ""
 set_flag_str SYSTEM_REVOCATION_KEYS ""
+set_flag_num FRAME_WARN 0
+enable_flags WERROR
 
 # quality-of-life
 disable_flags SECURITY_DMESG_RESTRICT

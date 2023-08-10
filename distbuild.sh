@@ -34,11 +34,6 @@ cd tools/perf
 time nice make -j$NUMCPUS --load-average=$NUMCPUS
 cd ../..
 
-# install kernel
-sudo make modules_install
-sudo make install
-sudo update-grub
-
 # hook vscode
 if [ -d ".vscode" ]; then
         "$SCRIPT_DIR/vscode.sh"

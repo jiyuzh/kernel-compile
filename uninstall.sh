@@ -23,7 +23,7 @@ done
 SCRIPT_DIR="$( cd -P "$( dirname -- "$SOURCE"; )" &> /dev/null && pwd 2> /dev/null; )";
 
 if [ "$#" -ne 1 ]; then
-    echo "Usage: ./uninstall.sh KERNVER"
+    echo "Usage: ./uninstall.sh {{kernel_version}}"
 fi
 
 KERNVER="$1"

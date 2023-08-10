@@ -1,20 +1,8 @@
 # Compile HOWTO
 
-### Build Script
-
-1. Run [build.sh](build.sh)
-
-2. Reboot
-
-### Distrubited Build Script
-
-1. Run [distbuild.sh](distbuild.sh)
-
-2. Reboot
-
 ### Config Script
 
-1. Run [configure.sh](configure.sh)
+1. Run [configure.sh](configure.sh): `./configure.sh {localver_name} [{config_type}] {ext_args}`
    
    :twisted_rightwards_arrows: You may override `lsmod` result with a `lsmod.override` file
    
@@ -34,13 +22,31 @@
 
 5. Use build script to compile
 
+### Build Script
+
+1. Run [build.sh](build.sh): `./build.sh`
+
+### Distrubited Build Script
+
+1. Run [distbuild.sh](distbuild.sh): `./distbuild.sh`
+
+### Kernel Installation Script
+
+1. Run [install.sh](install.sh): `sudo ./install.sh`
+
+2. Reboot
+
+### Kernel Uninstall Script
+
+1. Run [uninstall.sh](uninstall.sh): `sudo ./uninstall.sh {kernel_version}`
+
 ### Validator Script
 
-Run [validate.sh](validate.sh)
+Run [validate.sh](validate.sh): `./validate.sh {ext_args}`
 
 ### Vscode IntelliSense Script
 
-Run [vscode.sh](vscode.sh)
+Run [vscode.sh](vscode.sh): `./vscode.sh`
 
 
 ### Manual Configuration Steps
@@ -131,9 +137,12 @@ It will only work when invoked at the root directory of a valid linux source tre
 The script will generate new config file at `$PWD/.config`
 
 ```
-./configure.sh {localver_name} {ext_args}
+./configure.sh {localver_name} [{config_type}] {ext_args}
 Automatic kernel configuration generator for Linux 5.x
     localver_name: Value provided to CONFIG_LOCALVERSION, without leading dash
+    config_type: The fullness of the config, the default value is 'lite'
+        full: Do not remove unused modules
+        lite: Remove modules that are not loaded
     ext_args: A series of arguments tweaking the extension options
               The default is to use all available extensions
 ```
