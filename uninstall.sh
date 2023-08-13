@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 'use strict'
 # see https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
-set -Euxo pipefail # no -e as we may try to remove non-existent .old file
+set -Euo pipefail # no -e as we may try to remove non-existent .old file
 
 # failure message
 function __error_handing {
@@ -22,8 +22,12 @@ while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 SCRIPT_DIR="$( cd -P "$( dirname -- "$SOURCE"; )" &> /dev/null && pwd 2> /dev/null; )";
 
-if [ "$#" -ne 1 ]; then
+if [ "$#" -lt 1 ]; then
     echo "Usage: ./uninstall.sh {{kernel_version}}"
+
+    echo "Kernels installed:"
+    ls /boot | perl -ne 'print "\t$1\n" if /^initrd\.img-(.*)(?<!\.old)$/'
+    exit 1
 fi
 
 KERNVER="$1"
@@ -38,19 +42,27 @@ fi
 
 if [ ! -f "/boot/initrd.img-$KERNVER" ]; then
     echo "$KERNVER does not exist."
-	exit 1
+    exit 1
 fi
 
+echo
+echo "Uninstalling kernel $KERNVER"
+
 sudo rm "/boot/config-$KERNVER"
-sudo rm "/boot/config-$KERNVER.old"
 sudo rm "/boot/initrd.img-$KERNVER"
-sudo rm "/boot/initrd.img-$KERNVER.old"
 sudo rm "/boot/System.map-$KERNVER"
-sudo rm "/boot/System.map-$KERNVER.old"
 sudo rm "/boot/vmlinuz-$KERNVER"
-sudo rm "/boot/vmlinuz-$KERNVER.old"
 sudo rm -rf "/lib/modules/$KERNVER/"
 
-sudo update-grub
+sudo rm "/boot/config-$KERNVER.old"
+sudo rm "/boot/initrd.img-$KERNVER.old"
+sudo rm "/boot/System.map-$KERNVER.old"
+sudo rm "/boot/vmlinuz-$KERNVER.old"
+
+read -p "Do you need to update grub? " -n 1 -r
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+    sudo update-grub
+fi
 
 echo "Kernel ($KERNVER) uninstalled, please reboot"
