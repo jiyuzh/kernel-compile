@@ -35,8 +35,10 @@ time nice make -j$NUMCPUS --load-average=$NUMCPUS
 cd ../..
 
 # hook vscode
-if [ -d ".vscode" ]; then
-        "$SCRIPT_DIR/vscode.sh"
+if [ -f ./scripts/clang-tools/gen_compile_commands.py ]; then
+	python ./scripts/clang-tools/gen_compile_commands.py
+else
+	"$SCRIPT_DIR/gen_compile_commands.py"
 fi
 
 # success message

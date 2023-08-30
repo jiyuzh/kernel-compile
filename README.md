@@ -44,10 +44,6 @@
 
 Run [validate.sh](validate.sh): `./validate.sh {ext_args}`
 
-### Vscode IntelliSense Script
-
-Run [vscode.sh](vscode.sh): `./vscode.sh`
-
 
 ### Manual Configuration Steps
 
@@ -234,14 +230,6 @@ This script will invoke ***extensions***. See details below.
 This script will also look for these files in `$PWD`:
 
 - `local-validate.sh`: Local config validation script. If this file exists, the script will invoke it to validate the kernel config.
-
-### vscode.sh
-
-This script depends on `python-is-python3` to function properly.
-
-To use this script, you MUST compile the kernel at least once before running it.
-
-The default architecture is `x86`. If you want to use other architectures, you shall change the include path in `.vscode/c_cpp_properties.json`.
 
 ### Extension arguments (`ext_args`)
 
