@@ -36,7 +36,7 @@ cd ../..
 
 # hook vscode
 if [ -f ./scripts/clang-tools/gen_compile_commands.py ]; then
-	python ./scripts/clang-tools/gen_compile_commands.py
+	python3 ./scripts/clang-tools/gen_compile_commands.py
 else
 	"$SCRIPT_DIR/gen_compile_commands.py"
 fi
