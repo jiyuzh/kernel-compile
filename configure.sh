@@ -146,6 +146,8 @@ set_flag_str LOCALVERSION "$LOCALVER"
 set_flag_str SYSTEM_TRUSTED_KEYS ""
 set_flag_str SYSTEM_REVOCATION_KEYS ""
 set_flag_num FRAME_WARN 0
+enable_flags DEBUG_INFO
+disable_flags DEBUG_INFO_REDUCED
 enable_flags WERROR
 
 # quality-of-life
