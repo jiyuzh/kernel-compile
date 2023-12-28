@@ -256,6 +256,8 @@ This script provides the following special global variables and functions:
 
 `$kernelMinor`: Minor version of current **running** kernel.
 
+`$EXITCODE`: The return code of current validator. A non-zero value indicates error. All `check_*` provided by this script will set `$EXITCODE` to `1` upon failure.
+
 # Appendix
 
 ### Manual Configuration Steps
@@ -320,4 +322,3 @@ This script provides the following special global variables and functions:
 
 8. Use build script to compile
 
-`$EXITCODE`: The return code of current validator. A non-zero value indicates error. All `check_*` provided by this script will set `$EXITCODE` to `1` upon failure.
