@@ -45,68 +45,6 @@
 Run [validate.sh](validate.sh): `./validate.sh {ext_args}`
 
 
-### Manual Configuration Steps
-
-1. Download [standard config](https://github.com/nyrahul/linux-kernel-configs/blob/main/Ubuntu%2020.04.3%20LTS/5.11.0-1022-aws/bootconfig.md) ([local copy](ubuntu-20.04.config))
-
-2. `make listnewconfig | tee .config.newdiff`
-   
-   :clipboard: List and track newly added configs and their default value
-
-3. `make olddefconfig`
-   
-   :twisted_rightwards_arrows: Or `make oldconfig` to tweak each config manually
-   
-   :clipboard: Apply default values to newly added configs
-
-4. `make localmodconfig`
-   
-   :clipboard: Remove uncessary modules
-   
-   :warning: Make sure all necessary system functionalities are used at least once before, or [prepare a LSMOD file](https://docs.kernel.org/admin-guide/README.html#configuring-the-kernel)
-
-5. `echo '+' > .scmversion`
-   
-   :clipboard: Force append `+` to version number, i.e. `5.18.0+`
-   
-   :warning: Will also nullify `CONFIG_LOCALVERSION_AUTO`
-
-6. `make menuconfig`
-   
-   :twisted_rightwards_arrows: Or `make xconfig` for graphic interface
-   
-   1. `CONFIG_SYSTEM_TRUSTED_KEYS=""`
-      
-      `CONFIG_SYSTEM_REVOCATION_KEYS=""`
-      
-      :clipboard: Remove cert requirment
-   
-   2. `CONFIG_SECURITY_DMESG_RESTRICT=n`
-      
-      :clipboard: Allow non-sudo `dmesg`
-   
-   3. `CONFIG_LOCALVERSION="<VALUE>"` 
-      
-      :clipboard: Add kernel version suffix, e.g. `-custom`
-   
-   4. Adapt config for special software
-      
-      :clipboard: [`libvirt`](https://gitweb.gentoo.org/repo/gentoo.git/tree/app-emulation/libvirt/libvirt-8.4.0.ebuild#n144) and [`docker`](https://github.com/moby/moby/blob/master/contrib/check-config.sh) requirements
-   
-   5. Enable experiment-delicated kernel configs
-   
-   6. Do other config edits
-
-7. `ln .config config.example`
-   
-   :twisted_rightwards_arrows: You may skip this step
-   
-   :clipboard: This command creates a hard link, allowing git to track current configs through `config.example`
-   
-   :warning: The committed config is for reference only, since module requirements may differ
-
-8. Use build script to compile
-
 ### Prepare LSMOD
 
 ```bash
@@ -317,5 +255,69 @@ This script provides the following special global variables and functions:
 `$kernelMajor`: Major version of current **running** kernel.
 
 `$kernelMinor`: Minor version of current **running** kernel.
+
+# Appendix
+
+### Manual Configuration Steps
+
+1. Download [standard config](https://github.com/nyrahul/linux-kernel-configs/blob/main/Ubuntu%2020.04.3%20LTS/5.11.0-1022-aws/bootconfig.md) ([local copy](ubuntu-20.04.config))
+
+2. `make listnewconfig | tee .config.newdiff`
+   
+   :clipboard: List and track newly added configs and their default value
+
+3. `make olddefconfig`
+   
+   :twisted_rightwards_arrows: Or `make oldconfig` to tweak each config manually
+   
+   :clipboard: Apply default values to newly added configs
+
+4. `make localmodconfig`
+   
+   :clipboard: Remove uncessary modules
+   
+   :warning: Make sure all necessary system functionalities are used at least once before, or [prepare a LSMOD file](https://docs.kernel.org/admin-guide/README.html#configuring-the-kernel)
+
+5. `echo '+' > .scmversion`
+   
+   :clipboard: Force append `+` to version number, i.e. `5.18.0+`
+   
+   :warning: Will also nullify `CONFIG_LOCALVERSION_AUTO`
+
+6. `make menuconfig`
+   
+   :twisted_rightwards_arrows: Or `make xconfig` for graphic interface
+   
+   1. `CONFIG_SYSTEM_TRUSTED_KEYS=""`
+      
+      `CONFIG_SYSTEM_REVOCATION_KEYS=""`
+      
+      :clipboard: Remove cert requirment
+   
+   2. `CONFIG_SECURITY_DMESG_RESTRICT=n`
+      
+      :clipboard: Allow non-sudo `dmesg`
+   
+   3. `CONFIG_LOCALVERSION="<VALUE>"` 
+      
+      :clipboard: Add kernel version suffix, e.g. `-custom`
+   
+   4. Adapt config for special software
+      
+      :clipboard: [`libvirt`](https://gitweb.gentoo.org/repo/gentoo.git/tree/app-emulation/libvirt/libvirt-8.4.0.ebuild#n144) and [`docker`](https://github.com/moby/moby/blob/master/contrib/check-config.sh) requirements
+   
+   5. Enable experiment-delicated kernel configs
+   
+   6. Do other config edits
+
+7. `ln .config config.example`
+   
+   :twisted_rightwards_arrows: You may skip this step
+   
+   :clipboard: This command creates a hard link, allowing git to track current configs through `config.example`
+   
+   :warning: The committed config is for reference only, since module requirements may differ
+
+8. Use build script to compile
 
 `$EXITCODE`: The return code of current validator. A non-zero value indicates error. All `check_*` provided by this script will set `$EXITCODE` to `1` upon failure.
