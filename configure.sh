@@ -9,6 +9,8 @@ CONF_OUTPUT=".config" # in $PWD
 CONF_NEWDEF=".config.newdef" # in $PWD
 LSMOD_OVERRIDE="lsmod.override" # in $PWD
 LOCAL_CONFIGURE="local-configure.sh" # in $PWD
+LOCAL_PRE_CONFIGURE="./pre-configure.sh" # in $PWD
+LOCAL_POST_CONFIGURE="./post-configure.sh" # in $PWD
 
 # failure message
 function __error_handing {
@@ -110,6 +112,11 @@ set_flag_num() {
 
 set -x
 
+if [ -f "$LOCAL_PRE_CONFIGURE" ] && [ -x "$LOCAL_PRE_CONFIGURE" ]; then
+	echo "Running $LOCAL_PRE_CONFIGURE hook"
+	"$LOCAL_PRE_CONFIGURE"
+fi
+
 # backup config
 if [ -f "$CONF_OUTPUT" ]; then
 	TS=$(date +%s)
@@ -167,6 +174,11 @@ fi
 # this will also fix minor config issues introduced during rewrite step
 # so don't remove
 make menuconfig
+
+if [ -f "$LOCAL_POST_CONFIGURE" ] && [ -x "$LOCAL_POST_CONFIGURE" ]; then
+	echo "Running $LOCAL_POST_CONFIGURE hook"
+	"$LOCAL_POST_CONFIGURE"
+fi
 
 set +x
 

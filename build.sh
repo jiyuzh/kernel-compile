@@ -3,6 +3,10 @@
 # see https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
 set -Eeuxo pipefail
 
+# user config
+LOCAL_PRE_BUILD="./pre-build.sh" # in $PWD
+LOCAL_POST_BUILD="./post-build.sh" # in $PWD
+
 # failure message
 function __error_handing {
 	local last_status_code=$1;
@@ -22,6 +26,11 @@ while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 SCRIPT_DIR="$( cd -P "$( dirname -- "$SOURCE"; )" &> /dev/null && pwd 2> /dev/null; )";
 
+if [ -f "$LOCAL_PRE_BUILD" ] && [ -x "$LOCAL_PRE_BUILD" ]; then
+	echo "Running $LOCAL_PRE_BUILD hook"
+	"$LOCAL_PRE_BUILD"
+fi
+
 # get core count
 NUMCPUS=`grep -c '^processor' /proc/cpuinfo`
 
@@ -39,6 +48,11 @@ if [ -f ./scripts/clang-tools/gen_compile_commands.py ]; then
 	python3 ./scripts/clang-tools/gen_compile_commands.py
 else
 	"$SCRIPT_DIR/gen_compile_commands.py"
+fi
+
+if [ -f "$LOCAL_POST_BUILD" ] && [ -x "$LOCAL_POST_BUILD" ]; then
+	echo "Running $LOCAL_POST_BUILD hook"
+	"$LOCAL_POST_BUILD"
 fi
 
 # success message

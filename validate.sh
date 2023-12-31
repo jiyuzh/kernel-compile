@@ -2,7 +2,9 @@
 set -Eeuo pipefail
 
 # user config
-LOCAL_VALIDATE="local-validate.sh"
+LOCAL_VALIDATE="local-validate.sh" # in $PWD
+LOCAL_PRE_VALIDATE="./pre-validate.sh" # in $PWD
+LOCAL_POST_VALIDATE="./post-validate.sh" # in $PWD
 
 # failure message
 function __error_handing {
@@ -255,6 +257,11 @@ run_validate() {
 	fi
 }
 
+if [ -f "$LOCAL_PRE_VALIDATE" ] && [ -x "$LOCAL_PRE_VALIDATE" ]; then
+	echo "Running $LOCAL_PRE_VALIDATE hook"
+	"$LOCAL_PRE_VALIDATE"
+fi
+
 if [ ! -e "$CONFIG" ]; then
 	wrap_warning "warning: $CONFIG does not exist, searching other paths for kernel config ..."
 	for tryConfig in $possibleConfigs; do
@@ -281,6 +288,11 @@ done
 
 if [ -f "$LOCAL_VALIDATE" ]; then
 	run_validate "local" "$LOCAL_VALIDATE"
+fi
+
+if [ -f "$LOCAL_POST_VALIDATE" ] && [ -x "$LOCAL_POST_VALIDATE" ]; then
+	echo "Running $LOCAL_POST_VALIDATE hook"
+	"$LOCAL_POST_VALIDATE"
 fi
 
 TOTAL=$(( $SUCCED + $FAILED ))

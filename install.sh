@@ -3,6 +3,10 @@
 # see https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
 set -Eeuxo pipefail
 
+# user config
+LOCAL_PRE_INSTALL="./pre-install.sh" # in $PWD
+LOCAL_POST_INSTALL="./post-install.sh" # in $PWD
+
 # failure message
 function __error_handing {
 	local last_status_code=$1;
@@ -22,10 +26,20 @@ while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 SCRIPT_DIR="$( cd -P "$( dirname -- "$SOURCE"; )" &> /dev/null && pwd 2> /dev/null; )";
 
+if [ -f "$LOCAL_PRE_INSTALL" ] && [ -x "$LOCAL_PRE_INSTALL" ]; then
+	echo "Running $LOCAL_PRE_INSTALL hook"
+	"$LOCAL_PRE_INSTALL"
+fi
+
 # install kernel
 sudo make modules_install
 sudo make install
 sudo update-grub
+
+if [ -f "$LOCAL_POST_INSTALL" ] && [ -x "$LOCAL_POST_INSTALL" ]; then
+	echo "Running $LOCAL_POST_INSTALL hook"
+	"$LOCAL_POST_INSTALL"
+fi
 
 # success message
 KERNELRELEASE=$(cat include/config/kernel.release 2> /dev/null)
