@@ -38,6 +38,9 @@ NUMCPUS=`grep -c '^processor' /proc/cpuinfo`
 time nice make -j$NUMCPUS --load-average=$NUMCPUS
 time nice make modules -j$NUMCPUS --load-average=$NUMCPUS
 
+# prepare gdb
+time nice make scripts_gdb -j$NUMCPUS --load-average=$NUMCPUS
+
 # compile perf
 cd tools/perf
 time nice make -j$NUMCPUS --load-average=$NUMCPUS
