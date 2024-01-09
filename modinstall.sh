@@ -11,13 +11,15 @@ hook_at "install"
 
 run_pre_hooks
 
-# install kernel
-sudo make modules_install
-sudo make install
-sudo update-grub
+module=`ls -t *.ko | head -n 1`
+
+if [ ! -z "$module" ]; then
+	if [ -f "$module" ]; then
+		sudo insmod "$module"
+	fi
+fi
 
 run_post_hooks
 
 # success message
-KERNELRELEASE=$(cat include/config/kernel.release 2> /dev/null)
-echo "Kernel ($KERNELRELEASE) install ready, please reboot"
+echo "Module ($module) install ready"

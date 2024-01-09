@@ -9,27 +9,12 @@ CONF_OUTPUT=".config" # in $PWD
 CONF_NEWDEF=".config.newdef" # in $PWD
 LSMOD_OVERRIDE="lsmod.override" # in $PWD
 LOCAL_CONFIGURE="local-configure.sh" # in $PWD
-LOCAL_PRE_CONFIGURE="./pre-configure.sh" # in $PWD
-LOCAL_POST_CONFIGURE="./post-configure.sh" # in $PWD
-
-# failure message
-function __error_handing {
-	local last_status_code=$1;
-	local error_line_number=$2;
-	echo 1>&2 "Error - exited with status $last_status_code at line $error_line_number";
-	perl -slne 'if($.+5 >= $ln && $.-4 <= $ln){ $_="$. $_"; s/$ln/">" x length($ln)/eg; s/^\D+.*?$/\e[1;31m$&\e[0m/g;  print}' -- -ln=$error_line_number $0
-}
-
-trap '__error_handing $? $LINENO' ERR
 
 # file locator
-SOURCE="${BASH_SOURCE[0]:-$0}";
-while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
-	DIR="$( cd -P "$( dirname -- "$SOURCE"; )" &> /dev/null && pwd 2> /dev/null; )";
-	SOURCE="$( readlink -- "$SOURCE"; )";
-	[[ $SOURCE != /* ]] && SOURCE="${DIR}/${SOURCE}"; # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
-done
-SCRIPT_DIR="$( cd -P "$( dirname -- "$SOURCE"; )" &> /dev/null && pwd 2> /dev/null; )";
+SCRIPT_DIR=$(dirname "$(realpath -e "${BASH_SOURCE[0]:-$0}")")
+
+source "$SCRIPT_DIR/lib/common.sh"
+hook_at "config"
 
 # help message
 if [ "$#" -lt 1 ]; then
@@ -112,10 +97,7 @@ set_flag_num() {
 
 set -x
 
-if [ -f "$LOCAL_PRE_CONFIGURE" ] && [ -x "$LOCAL_PRE_CONFIGURE" ]; then
-	echo "Running $LOCAL_PRE_CONFIGURE hook"
-	"$LOCAL_PRE_CONFIGURE"
-fi
+run_pre_hooks
 
 # backup config
 if [ -f "$CONF_OUTPUT" ]; then
@@ -175,10 +157,7 @@ fi
 # so don't remove
 make menuconfig
 
-if [ -f "$LOCAL_POST_CONFIGURE" ] && [ -x "$LOCAL_POST_CONFIGURE" ]; then
-	echo "Running $LOCAL_POST_CONFIGURE hook"
-	"$LOCAL_POST_CONFIGURE"
-fi
+run_post_hooks
 
 set +x
 
