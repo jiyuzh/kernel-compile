@@ -34,24 +34,11 @@ fi
 # get core count
 NUMCPUS=`grep -c '^processor' /proc/cpuinfo`
 
-# compile kernel (using all cores)
+# compile module (using all cores)
 time nice make -j$NUMCPUS --load-average=$NUMCPUS
-time nice make modules -j$NUMCPUS --load-average=$NUMCPUS
-
-# prepare gdb
-time nice make scripts_gdb -j$NUMCPUS --load-average=$NUMCPUS
-
-# compile perf
-cd tools/perf
-time nice make -j$NUMCPUS --load-average=$NUMCPUS
-cd ../..
 
 # hook vscode
-if [ -f ./scripts/clang-tools/gen_compile_commands.py ]; then
-	python3 ./scripts/clang-tools/gen_compile_commands.py
-else
-	python3 "$SCRIPT_DIR/lib/gen_compile_commands.py"
-fi
+python3 "$SCRIPT_DIR/lib/gen_compile_commands.py"
 
 if [ -f "$LOCAL_POST_BUILD" ] && [ -x "$LOCAL_POST_BUILD" ]; then
 	echo "Running $LOCAL_POST_BUILD hook"
@@ -59,5 +46,4 @@ if [ -f "$LOCAL_POST_BUILD" ] && [ -x "$LOCAL_POST_BUILD" ]; then
 fi
 
 # success message
-KERNELRELEASE=$(cat include/config/kernel.release 2> /dev/null)
-echo "Kernel ($KERNELRELEASE) compile ready, please install"
+echo "Module compile ready, please install"
