@@ -23,9 +23,7 @@ function run_script {
 	fi
 }
 
-function run_pre_hooks {
-	set +x
-
+function run_pre_hooks_slient {
 	if [ -f "pre-$HOOK_NAME.sh" ]; then
 		_target_list=("pre-$HOOK_NAME.sh")
 	fi
@@ -35,13 +33,9 @@ function run_pre_hooks {
 	for _target_path in "${_target_list[@]}"; do
 		run_script "$_target_path"
 	done
-
-	set -x
 }
 
-function run_post_hooks {
-	set +x
-
+function run_post_hooks_slient {
 	_target_list=($(ls "post-$HOOK_NAME."*".sh" 2>/dev/null || true))
 
 	if [ -f "post-$HOOK_NAME.sh" ]; then
@@ -51,6 +45,21 @@ function run_post_hooks {
 	for _target_path in "${_target_list[@]}"; do
 		run_script "$_target_path"
 	done
+}
+
+
+function run_pre_hooks {
+	set +x
+
+	run_pre_hooks_slient
+
+	set -x
+}
+
+function run_post_hooks {
+	set +x
+
+	run_post_hooks_slient
 
 	set -x
 }

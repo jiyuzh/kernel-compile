@@ -242,7 +242,7 @@ run_validate() {
 	fi
 }
 
-run_pre_hooks
+run_pre_hooks_slient
 
 if [ ! -e "$CONFIG" ]; then
 	wrap_warning "warning: $CONFIG does not exist, searching other paths for kernel config ..."
@@ -272,7 +272,7 @@ if [ -f "$LOCAL_VALIDATE" ]; then
 	run_validate "local" "$LOCAL_VALIDATE"
 fi
 
-run_post_hooks
+run_post_hooks_slient
 
 TOTAL=$(( $SUCCED + $FAILED ))
 echo "Validation Report:"
