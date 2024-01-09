@@ -1,6 +1,6 @@
 # Compile HOWTO
 
-### Config Script
+### Kernel Config Script
 
 1. Run [configure.sh](configure.sh): `./configure.sh {localver_name} [{config_type}] {ext_args}`
    
@@ -22,17 +22,13 @@
 
 5. Use build script to compile
 
-### Build Script
+### Kernel Build Script
 
 1. Run [build.sh](build.sh): `./build.sh`
 
-### Distrubited Build Script
-
-1. Run [distbuild.sh](distbuild.sh): `./distbuild.sh`
-
 ### Kernel Installation Script
 
-1. Run [install.sh](install.sh): `sudo ./install.sh`
+1. Run [install.sh](install.sh): `./install.sh`
 
 2. Reboot
 
@@ -40,10 +36,21 @@
 
 1. Run [uninstall.sh](uninstall.sh): `sudo ./uninstall.sh {kernel_version}`
 
-### Validator Script
+### Kernel Validator Script
 
 Run [validate.sh](validate.sh): `./validate.sh {ext_args}`
 
+### Module Build Script
+
+1. Run [modbuild.sh](modbuild.sh): `./modbuild.sh`
+
+### Module Installation Script
+
+1. Run [modinstall.sh](modinstall.sh): `./modinstall.sh`
+
+### Distrubited Kernel Build Script
+
+1. Run [distbuild.sh](distbuild.sh): `./distbuild.sh`
 
 ### Prepare LSMOD
 
@@ -71,9 +78,10 @@ It will only work when invoked at the root directory of a valid linux source tre
 The script will generate new config file at `$PWD/.config`
 
 ```
-./configure.sh {localver_name} [{config_type}] {ext_args}
+./configure.sh {localver_name} [{{config_template}}] [{config_type}] {ext_args}
 Automatic kernel configuration generator for Linux 5.x
     localver_name: Value provided to CONFIG_LOCALVERSION, without leading dash
+    config_template: The template file to use with this script, can be a URL, a file path relative to current folder, or default config folder
     config_type: The fullness of the config, the default value is 'lite'
         full: Do not remove unused modules
         lite: Remove modules that are not loaded
@@ -236,6 +244,16 @@ These values are reserved and shall not be ext_name:
 
 `set_flag_num {flag} {value}`: Set flag value to a number
 
+`kern_ver_ge {maj} [{min}] [{pth}] [{exa}]`: Evaluate to true when the kernel version is greater than or equal to the given value
+
+`$KERNEL_MAJOR`: Major version of the kernel
+
+`$KERNEL_MINOR`: Minor version of the kernel
+
+`$KERNEL_PATCH`: Patch level of the kernel
+
+`$KERNEL_EXTRA`: Extra part of the version string of the kernel before configuration start
+
 ##### validate.sh
 
 This script provides the following special global variables and functions:
@@ -246,15 +264,25 @@ This script provides the following special global variables and functions:
 
 `check_no_flags {flag_list}`: Require a list of flags to be not enabled in the **checking** kernel.
 
+`check_num_eq {flag} {value}`: Require a numeric flags equal to the given value in the **checking** kernel.
+
+`check_str {flag} {value}`: Require a string flags equal to the given value in the **checking** kernel.
+
 `check_arch {arch}`: Require the architecture of the **running** environment.
 
 `check_command {command}`: Require a command to present in the **running** environment.
 
 `check_device {path}`: Require a device to present in the **running** environment.
 
-`$kernelMajor`: Major version of current **running** kernel.
+`kern_ver_ge {maj} [{min}] [{pth}] [{exa}]`: Evaluate to true when the **checking** kernel version is greater than or equal to the given value.
 
-`$kernelMinor`: Minor version of current **running** kernel.
+`$KERNEL_MAJOR`: Major version of the **checking** kernel.
+
+`$KERNEL_MINOR`: Minor version of the **checking** kernel.
+
+`$KERNEL_PATCH`: Patch level of the **checking** kernel.
+
+`$KERNEL_EXTRA`: Extra part of the version string of the **checking** kernel.
 
 `$EXITCODE`: The return code of current validator. A non-zero value indicates error. All `check_*` provided by this script will set `$EXITCODE` to `1` upon failure.
 
