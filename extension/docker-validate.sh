@@ -70,19 +70,19 @@ check_flags \
 	POSIX_MQUEUE
 # (POSIX_MQUEUE is required for bind-mounting /dev/mqueue into containers)
 
-if [ "$kernelMajor" -lt 4 ] || ([ "$kernelMajor" -eq 4 ] && [ "$kernelMinor" -lt 8 ]); then
+if [ "$KERNEL_MAJOR" -lt 4 ] || ([ "$KERNEL_MAJOR" -eq 4 ] && [ "$KERNEL_MINOR" -lt 8 ]); then
 	check_flags DEVPTS_MULTIPLE_INSTANCES
 fi
 
-if [ "$kernelMajor" -lt 5 ] || [ "$kernelMajor" -eq 5 -a "$kernelMinor" -le 1 ]; then
+if [ "$KERNEL_MAJOR" -lt 5 ] || [ "$KERNEL_MAJOR" -eq 5 -a "$KERNEL_MINOR" -le 1 ]; then
 	check_flags NF_NAT_IPV4
 fi
 
-if [ "$kernelMajor" -lt 5 ] || [ "$kernelMajor" -eq 5 -a "$kernelMinor" -le 2 ]; then
+if [ "$KERNEL_MAJOR" -lt 5 ] || [ "$KERNEL_MAJOR" -eq 5 -a "$KERNEL_MINOR" -le 2 ]; then
 	check_flags NF_NAT_NEEDED
 fi
 # check availability of BPF_CGROUP_DEVICE support
-if [ "$kernelMajor" -ge 5 ] || ([ "$kernelMajor" -eq 4 ] && [ "$kernelMinor" -ge 15 ]); then
+if [ "$KERNEL_MAJOR" -ge 5 ] || ([ "$KERNEL_MAJOR" -eq 4 ] && [ "$KERNEL_MINOR" -ge 15 ]); then
 	check_flags CGROUP_BPF
 fi
 
@@ -103,7 +103,7 @@ echo 'Docker Optional:'
 {
 	check_flags MEMCG_SWAP
 	# Kernel v5.8+ removes MEMCG_SWAP_ENABLED.
-	if [ "$kernelMajor" -lt 5 ] || [ "$kernelMajor" -eq 5 -a "$kernelMinor" -le 8 ]; then
+	if [ "$KERNEL_MAJOR" -lt 5 ] || [ "$KERNEL_MAJOR" -eq 5 -a "$KERNEL_MINOR" -le 8 ]; then
 		CODE=${EXITCODE}
 		check_flags MEMCG_SWAP_ENABLED
 		# FIXME this check is cgroupv1-specific
@@ -140,21 +140,21 @@ echo 'Docker Optional:'
 	fi
 }
 
-if [ "$kernelMajor" -lt 4 ] || ([ "$kernelMajor" -eq 4 ] && [ "$kernelMinor" -le 5 ]); then
+if [ "$KERNEL_MAJOR" -lt 4 ] || ([ "$KERNEL_MAJOR" -eq 4 ] && [ "$KERNEL_MINOR" -le 5 ]); then
 	check_flags MEMCG_KMEM
 fi
 
-if [ "$kernelMajor" -lt 3 ] || ([ "$kernelMajor" -eq 3 ] && [ "$kernelMinor" -le 18 ]); then
+if [ "$KERNEL_MAJOR" -lt 3 ] || ([ "$KERNEL_MAJOR" -eq 3 ] && [ "$KERNEL_MINOR" -le 18 ]); then
 	check_flags RESOURCE_COUNTERS
 fi
 
-if [ "$kernelMajor" -lt 3 ] || ([ "$kernelMajor" -eq 3 ] && [ "$kernelMinor" -le 13 ]); then
+if [ "$KERNEL_MAJOR" -lt 3 ] || ([ "$KERNEL_MAJOR" -eq 3 ] && [ "$KERNEL_MINOR" -le 13 ]); then
 	netprio=NETPRIO_CGROUP
 else
 	netprio=CGROUP_NET_PRIO
 fi
 
-if [ "$kernelMajor" -lt 5 ]; then
+if [ "$KERNEL_MAJOR" -lt 5 ]; then
 	check_flags IOSCHED_CFQ CFQ_GROUP_IOSCHED
 fi
 
@@ -195,7 +195,7 @@ check_flags VXLAN BRIDGE_VLAN_FILTERING | sed 's/^/    /'
 echo '      Optional (for encrypted networks):'
 check_flags CRYPTO CRYPTO_AEAD CRYPTO_GCM CRYPTO_SEQIV CRYPTO_GHASH \
 	XFRM XFRM_USER XFRM_ALGO INET_ESP | sed 's/^/      /'
-if [ "$kernelMajor" -lt 5 ] || [ "$kernelMajor" -eq 5 -a "$kernelMinor" -le 3 ]; then
+if [ "$KERNEL_MAJOR" -lt 5 ] || [ "$KERNEL_MAJOR" -eq 5 -a "$KERNEL_MINOR" -le 3 ]; then
 	check_flags INET_XFRM_MODE_TRANSPORT | sed 's/^/      /'
 fi
 echo "  - \"$(wrap_color 'ipvlan' blue)\":"

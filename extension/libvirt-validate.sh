@@ -43,7 +43,7 @@ check_flags \
 	UTS_NS \
 	VETH
 
-if [ "$kernelMajor" -lt 4 ] || ([ "$kernelMajor" -eq 4 ] && [ "$kernelMinor" -lt 8 ]); then
+if [ "$KERNEL_MAJOR" -lt 4 ] || ([ "$KERNEL_MAJOR" -eq 4 ] && [ "$KERNEL_MINOR" -lt 8 ]); then
 	check_flags DEVPTS_MULTIPLE_INSTANCES
 fi
 

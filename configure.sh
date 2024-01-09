@@ -9,6 +9,7 @@ CONF_OUTPUT=".config" # in $PWD
 CONF_NEWDEF=".config.newdef" # in $PWD
 LSMOD_OVERRIDE="lsmod.override" # in $PWD
 LOCAL_CONFIGURE="local-configure.sh" # in $PWD
+MAKEFILE="Makefile" # in $PWD
 
 # file locator
 SCRIPT_DIR=$(dirname "$(realpath -e "${BASH_SOURCE[0]:-$0}")")
@@ -21,7 +22,7 @@ if [ "$#" -lt 1 ]; then
 	echo "./configure.sh {{localver_name}} [{{config_template}}] [{{config_type}}] {{ext_args}}"
 	echo "Automatic kernel configuration generator for Linux 5.x"
 	echo "    localver_name: Value provided to CONFIG_LOCALVERSION, without leading dash"
-	echo "    config_template: The template file to use with this script"
+	echo "    config_template: The template file to use with this script, can be a URL, a file path relative to current folder, or default config folder"
 	echo "    config_type: The fullness of the config, the default value is 'lite'"
 	echo "        full: Do not remove unused modules"
 	echo "        lite: Remove modules that are not loaded"
@@ -61,7 +62,7 @@ USE_EXTENSION=( $("$SCRIPT_DIR/extension/registry.sh" "$SCRIPT_DIR/extension" "c
 echo "Using configuration extensions: "
 echo "    ${USE_EXTENSION[@]}"
 
-# flag operaitons
+# flag operations
 enable_flag() {
 	scripts/config --enable "CONFIG_$1"
 }
@@ -105,9 +106,30 @@ set_flag_num() {
 	set -x
 }
 
+kern_ver_ge() {
+	if [ "$KERNEL_MAJOR" -lt "$1" ]; then
+		false
+	elif [ "$#" -ge 2 ] && [ "$KERNEL_MINOR" -lt "$2" ]; then
+		false
+	elif [ "$#" -ge 3 ] && [ "$KERNEL_PATCH" -lt "$3" ]; then
+		false
+	elif [ "$#" -ge 4 ] && [[ "$KERNEL_EXTRA" == "-rc"* ]] && [[ "$4" == "-rc"* ]] && [[ "$KERNEL_EXTRA" < "$4" ]]; then
+		false
+	else
+		true
+	fi
+}
+
 set -x
 
 run_pre_hooks
+
+# probe kernel version
+MAKEFILE=$(realpath "$MAKEFILE")
+KERNEL_MAJOR=$(cat "$MAKEFILE" | perl -ne 'if (/^VERSION\s*=\s*(\d+)\s*(?:#.*)?$/) { print $1; $found ||= 1; } }{ print 0 if !$found')
+KERNEL_MINOR=$(cat "$MAKEFILE" | perl -ne 'if (/^PATCHLEVEL\s*=\s*(\d+)\s*(?:#.*)?$/) { print $1; $found ||= 1; } }{ print 0 if !$found')
+KERNEL_PATCH=$(cat "$MAKEFILE" | perl -ne 'if (/^SUBLEVEL\s*=\s*(\d+)\s*(?:#.*)?$/) { print $1; $found ||= 1; } }{ print 0 if !$found')
+KERNEL_EXTRA=$(cat "$MAKEFILE" | perl -ne 'if (/^EXTRAVERSION\s*=\s*(.*?)\s*(?:#.*)?$/) { print $1; }')
 
 # backup config
 if [ -f "$CONF_OUTPUT" ]; then
@@ -150,17 +172,8 @@ if [[ "$CONFIGTYP" == "lite" ]]; then
 fi
 echo '+' > .scmversion
 
-# compile or install blocker
+# set local version
 set_flag_str LOCALVERSION "$LOCALVER"
-set_flag_str SYSTEM_TRUSTED_KEYS ""
-set_flag_str SYSTEM_REVOCATION_KEYS ""
-set_flag_num FRAME_WARN 0
-enable_flags DEBUG_INFO
-disable_flags DEBUG_INFO_REDUCED
-enable_flags WERROR
-
-# quality-of-life
-disable_flags SECURITY_DMESG_RESTRICT
 
 # apply application requirements
 for ext in "${USE_EXTENSION[@]}"
@@ -183,6 +196,6 @@ set +x
 
 "$SCRIPT_DIR/validate.sh" "nofail" "${EXT_ARGS[@]}"
 
-echo "Kernel config is ready"
+echo "Kernel $KERNEL_MAJOR.$KERNEL_MINOR.$KERNEL_PATCH$LOCALVER config is ready"
 echo "Reminder: You may still need to enable custom configs before compile"
 

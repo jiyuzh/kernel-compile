@@ -14,17 +14,8 @@ hook_at "validate"
 
 EXITCODE=0
 
-# bits of this were adapted from lxc-checkconfig
-# see also https://github.com/lxc/lxc/blob/lxc-1.0.2/src/lxc/lxc-checkconfig.in
-
-possibleConfigs="
-	/proc/config.gz
-	/boot/config-$(uname -r)
-	/usr/src/linux-$(uname -r)/.config
-	/usr/src/linux/.config
-"
-
 CONFIG=".config"
+MAKEFILE="Makefile"
 FAILED=0
 FAILED_EXT=()
 SUCCED=0
@@ -49,11 +40,6 @@ if ! command -v zgrep > /dev/null 2>&1; then
 	}
 fi
 
-kernelVersion="$(uname -r)"
-kernelMajor="${kernelVersion%%.*}"
-kernelMinor="${kernelVersion#$kernelMajor.}"
-kernelMinor="${kernelMinor%%.*}"
-
 is_set() {
 	zgrep "CONFIG_$1=[y|m]" "$CONFIG" > /dev/null
 }
@@ -62,6 +48,14 @@ is_set_in_kernel() {
 }
 is_set_as_module() {
 	zgrep "CONFIG_$1=m" "$CONFIG" > /dev/null
+}
+is_num_eq() {
+	FOUND_VAL=$(cat "$CONFIG" | perl -ne 'print $1 if /^'"CONFIG_$1"'=(.*)$/')
+	zgrep "CONFIG_$1=$2" "$CONFIG" > /dev/null
+}
+is_str() {
+	FOUND_VAL=$(cat "$CONFIG" | perl -ne 'print $1 if /^'"CONFIG_$1"'="(.*)"$/')
+	zgrep "CONFIG_$1=\"$2\"" "$CONFIG" > /dev/null
 }
 
 color() {
@@ -99,13 +93,20 @@ wrap_color() {
 }
 
 wrap_good() {
+	printf -- '- '
 	echo "$(wrap_color "$1" white): $(wrap_color "$2" green)"
 }
 wrap_bad() {
+	printf -- '- '
 	echo "$(wrap_color "$1" bold): $(wrap_color "$2" bold red)"
 }
 wrap_pass() {
-	echo "$(wrap_color "$1" bold): $(wrap_color "$2" bold blue)"
+	printf -- '- '
+	echo "$(wrap_color "$1" white): $(wrap_color "$2" bold blue)"
+}
+wrap_skip() {
+	printf -- '- '
+	echo "$(wrap_color "$1" bold): $(wrap_color "skipped" bold yellow)"
 }
 wrap_warning() {
 	wrap_color >&2 "$*" red
@@ -124,7 +125,6 @@ check_flag() {
 
 check_flags() {
 	for flag in "$@"; do
-		printf -- '- '
 		check_flag "$flag"
 	done
 }
@@ -143,7 +143,6 @@ check_yes_flag() {
 
 check_yes_flags() {
 	for flag in "$@"; do
-		printf -- '- '
 		check_yes_flag "$flag"
 	done
 }
@@ -162,9 +161,26 @@ check_no_flag() {
 
 check_no_flags() {
 	for flag in "$@"; do
-		printf -- '- '
 		check_no_flag "$flag"
 	done
+}
+
+check_num_eq() {
+	if is_num_eq "$1" "$2"; then
+		wrap_good "CONFIG_$1" "$FOUND_VAL"
+	else
+		wrap_bad "CONFIG_$1" "$FOUND_VAL"
+		EXITCODE=1
+	fi
+}
+
+check_str() {
+	if is_str "$1" "$2"; then
+		wrap_good "CONFIG_$1" "\"$FOUND_VAL\""
+	else
+		wrap_bad "CONFIG_$1" "\"$FOUND_VAL\""
+		EXITCODE=1
+	fi
 }
 
 check_arch() {
@@ -218,6 +234,24 @@ check_distro_userns() {
 	esac
 }
 
+skip_flag() {
+	wrap_skip "$1"
+}
+
+kern_ver_ge() {
+	if [ "$KERNEL_MAJOR" -lt "$1" ]; then
+		false
+	elif [ "$#" -ge 2 ] && [ "$KERNEL_MINOR" -lt "$2" ]; then
+		false
+	elif [ "$#" -ge 3 ] && [ "$KERNEL_PATCH" -lt "$3" ]; then
+		false
+	elif [ "$#" -ge 4 ] && [[ "$KERNEL_EXTRA" == "-rc"* ]] && [[ "$4" == "-rc"* ]] && [[ "$KERNEL_EXTRA" < "$4" ]]; then
+		false
+	else
+		true
+	fi
+}
+
 run_validate() {
 	local name="$1"
 	local path="$2"
@@ -244,23 +278,32 @@ run_validate() {
 
 run_pre_hooks_slient
 
+CONFIG=$(realpath "$CONFIG")
+MAKEFILE=$(realpath "$MAKEFILE")
+
 if [ ! -e "$CONFIG" ]; then
-	wrap_warning "warning: $CONFIG does not exist, searching other paths for kernel config ..."
-	for tryConfig in $possibleConfigs; do
-		if [ -e "$tryConfig" ]; then
-			CONFIG="$tryConfig"
-			break
-		fi
-	done
-	if [ ! -e "$CONFIG" ]; then
-		wrap_warning "error: cannot find kernel config"
-		wrap_warning "  try running this script again, specifying the kernel config:"
-		wrap_warning "    CONFIG=/path/to/kernel/.config $0 or $0 /path/to/kernel/.config"
-		exit 1
-	fi
+	wrap_warning "error: cannot find kernel config"
+	wrap_warning "  try running this script again, specifying the kernel config:"
+	wrap_warning "    CONFIG=/path/to/kernel/.config $0 or $0 /path/to/kernel/.config"
+	exit 1
 fi
 
-wrap_color "info: reading kernel config from $CONFIG ..." white
+if [ ! -e "$MAKEFILE" ]; then
+	wrap_warning "error: cannot find kernel makefile"
+	wrap_warning "  try running this script again, specifying the kernel config paired with the make file:"
+	wrap_warning "    CONFIG=/path/to/kernel/.config $0 or $0 /path/to/kernel/.config"
+	exit 1
+fi
+
+wrap_color "info: reading kernel config from $CONFIG ..." blue
+echo
+
+KERNEL_MAJOR=$(cat "$MAKEFILE" | perl -ne 'if (/^VERSION\s*=\s*(\d+)\s*(?:#.*)?$/) { print $1; $found ||= 1; } }{ print 0 if !$found')
+KERNEL_MINOR=$(cat "$MAKEFILE" | perl -ne 'if (/^PATCHLEVEL\s*=\s*(\d+)\s*(?:#.*)?$/) { print $1; $found ||= 1; } }{ print 0 if !$found')
+KERNEL_PATCH=$(cat "$MAKEFILE" | perl -ne 'if (/^SUBLEVEL\s*=\s*(\d+)\s*(?:#.*)?$/) { print $1; $found ||= 1; } }{ print 0 if !$found')
+KERNEL_EXTRA=$(cat "$MAKEFILE" | perl -ne 'if (/^EXTRAVERSION\s*=\s*(.*?)\s*(?:#.*)?$/) { print $1; }')
+
+wrap_color "info: kernel version is $KERNEL_MAJOR.$KERNEL_MINOR.$KERNEL_PATCH$KERNEL_EXTRA" blue
 echo
 
 for ext in "${USE_EXTENSION[@]}"
