@@ -4,7 +4,7 @@
 set -Eeuo pipefail
 
 # user config
-BASE_CONFIG='ubuntu-22.04-5.15.config' # URL or relative to script dir
+CONFIG_SRC='ubuntu-5.15.config' # URL or relative to script dir
 CONF_OUTPUT=".config" # in $PWD
 CONF_NEWDEF=".config.newdef" # in $PWD
 LSMOD_OVERRIDE="lsmod.override" # in $PWD
@@ -18,9 +18,10 @@ hook_at "config"
 
 # help message
 if [ "$#" -lt 1 ]; then
-	echo "./configure.sh {{localver_name}} [{{config_type}}] {{ext_args}}"
+	echo "./configure.sh {{localver_name}} [{{config_template}}] [{{config_type}}] {{ext_args}}"
 	echo "Automatic kernel configuration generator for Linux 5.x"
 	echo "    localver_name: Value provided to CONFIG_LOCALVERSION, without leading dash"
+	echo "    config_template: The template file to use with this script"
 	echo "    config_type: The fullness of the config, the default value is 'lite'"
 	echo "        full: Do not remove unused modules"
 	echo "        lite: Remove modules that are not loaded"
@@ -35,6 +36,12 @@ fi
 LOCALVER="-$1"
 shift
 
+# get config base
+if [ "$#" -gt 0 ]; then
+	CONFIG_SRC="$1"
+	shift
+fi
+
 # get full module type
 CONFIGTYP="lite"
 if [ "$#" -gt 0 ] && [[ "$1" == "full" ]]; then
@@ -43,6 +50,9 @@ if [ "$#" -gt 0 ] && [[ "$1" == "full" ]]; then
 elif [ "$#" -gt 0 ] && [[ "$1" == "lite" ]]; then
 	CONFIGTYP="lite"
 	shift
+elif [ "$#" -gt 0 ]; then
+	echo "Unknown config mode $1"
+	exit 1
 fi
 
 # generate extension list
@@ -106,15 +116,25 @@ if [ -f "$CONF_OUTPUT" ]; then
 fi
 
 # obtain base config
-if [[ "$BASE_CONFIG" =~ ^https?:  ]]; then
-	# from web
-	wget -O "$CONF_OUTPUT" "$BASE_CONFIG"
+if [[ "$CONFIG_SRC" =~ ^https?: ]]; then
+	BASE_CONFIG=$(sudo mktemp "/tmp/config-template.XXXXXXXX")
+	sudo wget -O "$BASE_CONFIG" "$CONFIG_SRC"
+	sudo chown "$USER:$USER" "$BASE_CONFIG"
+elif [ -f "$CONFIG_SRC" ]; then
+	BASE_CONFIG=$(realpath -e "$CONFIG_SRC")
+elif [ -f "$SCRIPT_DIR/config/$CONFIG_SRC" ]; then
+	BASE_CONFIG=$(realpath -e "$SCRIPT_DIR/config/$CONFIG_SRC")
 else
-	# from local
-	cp -f "$SCRIPT_DIR/$BASE_CONFIG" "$CONF_OUTPUT"
+	echo "Unable to find config template $CONFIG_SRC"
+	exit 1
 fi
-perl -pi.__edit_temp -e 's/^```$//g' "$CONF_OUTPUT"
-rm "$CONF_OUTPUT.__edit_temp"
+
+if ! grep -q "CONFIG_CC_IS_GCC=" "$BASE_CONFIG"; then
+	echo "$CONFIG_SRC is not a valid kernel config file"
+	exit 1
+fi
+
+sudo cp -f "$BASE_CONFIG" "$CONF_OUTPUT"
 
 # localize config
 make listnewconfig > "$CONF_NEWDEF"
