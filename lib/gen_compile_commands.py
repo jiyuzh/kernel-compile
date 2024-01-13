@@ -124,7 +124,7 @@ def cmdfiles_for_a(archive, ar):
         yield to_cmdfile(obj)
 
 
-def cmdfiles_for_modorder(modorder):
+def cmdfiles_for_modorder(modorder, quirk):
     """Generate the iterator of .cmd files associated with the modules.order.
 
     Parse the given modules.order, and yield every .cmd file used to build the
@@ -140,11 +140,18 @@ def cmdfiles_for_modorder(modorder):
         for line in f:
             obj = line.rstrip()
             base, ext = os.path.splitext(obj)
-            if ext != '.o':
-                sys.exit('{}: module path must end with .o'.format(obj))
+            obj_ext = '.o'
+            if quirk['ko_modules_order']:
+                obj_ext = '.ko'
+            if ext != obj_ext:
+                sys.exit('{}: module path must end with {}'.format(obj, obj_ext))
             mod = base + '.mod'
             # Read from *.mod, to get a list of objects that compose the module.
             with open(mod) as m:
+                if quirk['space_delim_mod']:
+                    for obj in m.readline().split():
+                        yield to_cmdfile(obj)
+                    return
                 for mod_line in m:
                     yield to_cmdfile(mod_line.rstrip())
 
@@ -183,6 +190,48 @@ def process_line(root_directory, command_prefix, file_path):
     }
 
 
+def detect_compatibility_mode(kern_directory):
+    make_file = os.path.realpath(os.path.join(kern_directory, 'Makefile'))
+    make_body = open(make_file, 'r')
+    make_text = make_body.read()
+    make_body.close()
+
+    major_match = re.search("^VERSION\s*=\s*(\d+)\s*(?:#.*)?$", make_text, re.MULTILINE)
+    if major_match is not None:
+        major = int(major_match.group(1))
+    else:
+        major = 0
+
+    minor_match = re.search("^PATCHLEVEL\s*=\s*(\d+)\s*(?:#.*)?$", make_text, re.MULTILINE)
+    if minor_match is not None:
+        minor = int(minor_match.group(1))
+    else:
+        minor = 0
+
+    logging.warning('Detected kernel version {}.{}'.format(major, minor))
+
+    quirk = {
+        'possible_no_mod': True,
+        'space_delim_mod': True,
+        'ko_modules_order': True,
+    }
+
+    # After 5.2: .mod file is generated in all module compilation
+    if major > 5 or (major == 5 and minor > 2):
+        quirk['possible_no_mod'] = False
+
+    # After 5.18: .mod file use new line as delimiter instead of space
+    if major > 5 or (major == 5 and minor > 18):
+        quirk['space_delim_mod'] = False
+
+    # After 6.1: change module.order to list *.o instead of *.ko
+    if major > 6 or (major == 6 and minor > 1):
+        quirk['ko_modules_order'] = False
+
+    print(quirk)
+    return quirk
+
+
 def main():
     """Walks through the directory and finds and parses .cmd files."""
     log_level, directory, output, ar, paths = parse_arguments()
@@ -190,11 +239,16 @@ def main():
     level = getattr(logging, log_level)
     logging.basicConfig(format='%(levelname)s: %(message)s', level=level)
 
+    quirk = detect_compatibility_mode(directory)
+
     line_matcher = re.compile(_LINE_PATTERN)
 
     compile_commands = []
 
     for path in paths:
+        if quirk['possible_no_mod'] and path.endswith('modules.order'):
+            path = os.path.realpath(os.path.dirname(path))
+
         # If 'path' is a directory, handle all .cmd files under it.
         # Otherwise, handle .cmd files associated with the file.
         # built-in objects are linked via vmlinux.a
@@ -204,7 +258,7 @@ def main():
         elif path.endswith('.a'):
             cmdfiles = cmdfiles_for_a(path, ar)
         elif path.endswith('modules.order'):
-            cmdfiles = cmdfiles_for_modorder(path)
+            cmdfiles = cmdfiles_for_modorder(path, quirk)
         else:
             sys.exit('{}: unknown file type'.format(path))
 

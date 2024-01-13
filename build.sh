@@ -28,7 +28,8 @@ cd ../..
 
 # hook vscode
 if [ -f ./scripts/clang-tools/gen_compile_commands.py ]; then
-	python3 ./scripts/clang-tools/gen_compile_commands.py
+	# works since 5.10
+	make compile_commands.json
 else
 	python3 "$SCRIPT_DIR/lib/gen_compile_commands.py"
 fi
