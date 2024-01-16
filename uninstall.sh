@@ -12,7 +12,7 @@ if [ "$#" -lt 1 ]; then
     echo "Usage: ./uninstall.sh {{kernel_version}}"
 
     echo "Kernels installed:"
-    ls /boot | perl -ne 'print "\t$1\n" if /^initrd\.img-(.*)(?<!\.old)$/'
+    ls /boot | perl -ne 'print "\t$1\n" if /^vmlinuz-(.*)(?<!\.old)$/'
     exit 1
 fi
 
@@ -38,12 +38,14 @@ sudo rm "/boot/config-$KERNVER"
 sudo rm "/boot/initrd.img-$KERNVER"
 sudo rm "/boot/System.map-$KERNVER"
 sudo rm "/boot/vmlinuz-$KERNVER"
+sudo rm "/var/lib/initramfs-tools/$KERNVER"
 sudo rm -rf "/lib/modules/$KERNVER/"
 
 sudo rm "/boot/config-$KERNVER.old"
 sudo rm "/boot/initrd.img-$KERNVER.old"
 sudo rm "/boot/System.map-$KERNVER.old"
 sudo rm "/boot/vmlinuz-$KERNVER.old"
+sudo rm "/var/lib/initramfs-tools/$KERNVER.old"
 
 read -p "Do you need to update grub? " -n 1 -r
 if [[ $REPLY =~ ^[Yy]$ ]]
