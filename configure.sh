@@ -60,7 +60,8 @@ fi
 EXT_ARGS=( "$@" "--with-local" )
 USE_EXTENSION=( $("$SCRIPT_DIR/extension/registry.sh" "$SCRIPT_DIR/extension" "configure" "${EXT_ARGS[@]}") )
 echo "Using configuration extensions: "
-echo "    ${USE_EXTENSION[@]}"
+printf '    %s\n' "${USE_EXTENSION[@]}"
+echo
 
 # flag operations
 enable_flag() {
@@ -126,10 +127,10 @@ run_pre_hooks
 
 # probe kernel version
 MAKEFILE=$(realpath "$MAKEFILE")
-KERNEL_MAJOR=$(cat "$MAKEFILE" | perl -ne 'if (/^VERSION\s*=\s*(\d+)\s*(?:#.*)?$/) { print $1; $found ||= 1; } }{ print 0 if !$found')
-KERNEL_MINOR=$(cat "$MAKEFILE" | perl -ne 'if (/^PATCHLEVEL\s*=\s*(\d+)\s*(?:#.*)?$/) { print $1; $found ||= 1; } }{ print 0 if !$found')
-KERNEL_PATCH=$(cat "$MAKEFILE" | perl -ne 'if (/^SUBLEVEL\s*=\s*(\d+)\s*(?:#.*)?$/) { print $1; $found ||= 1; } }{ print 0 if !$found')
-KERNEL_EXTRA=$(cat "$MAKEFILE" | perl -ne 'if (/^EXTRAVERSION\s*=\s*(.*?)\s*(?:#.*)?$/) { print $1; }')
+KERNEL_MAJOR=$(perl -ne 'if (/^VERSION\s*=\s*(\d+)\s*(?:#.*)?$/) { print $1; $found ||= 1; } }{ print 0 if !$found' < "$MAKEFILE")
+KERNEL_MINOR=$(perl -ne 'if (/^PATCHLEVEL\s*=\s*(\d+)\s*(?:#.*)?$/) { print $1; $found ||= 1; } }{ print 0 if !$found' < "$MAKEFILE")
+KERNEL_PATCH=$(perl -ne 'if (/^SUBLEVEL\s*=\s*(\d+)\s*(?:#.*)?$/) { print $1; $found ||= 1; } }{ print 0 if !$found' < "$MAKEFILE")
+KERNEL_EXTRA=$(perl -ne 'if (/^EXTRAVERSION\s*=\s*(.*?)\s*(?:#.*)?$/) { print $1; }' < "$MAKEFILE")
 
 # backup config
 if [ -f "$CONF_OUTPUT" ]; then
@@ -198,4 +199,3 @@ set +x
 
 echo "Kernel $KERNEL_MAJOR.$KERNEL_MINOR.$KERNEL_PATCH$LOCALVER config is ready"
 echo "Reminder: You may still need to enable custom configs before compile"
-

@@ -19,4 +19,3 @@ module_flags \
 	NET_SCH_SFQ \
 	KVM_INTEL \
 	KVM_AMD
-

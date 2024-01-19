@@ -11,9 +11,9 @@ hook_at "install"
 
 run_pre_hooks
 
-module=`ls -t *.ko | head -n 1`
+module=$(ls -t ./*.ko | head -n 1)
 
-if [ ! -z "$module" ]; then
+if [ -n "$module" ]; then
 	if [ -f "$module" ]; then
 		sudo insmod "$module"
 	fi

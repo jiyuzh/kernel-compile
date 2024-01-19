@@ -12,19 +12,19 @@ hook_at "build"
 run_pre_hooks
 
 # get core count
-NUMCPUS=`grep -c '^processor' /proc/cpuinfo`
+NUMCPUS=$(nproc)
 
 # compile module (using all cores)
-time nice make -j$NUMCPUS --load-average=$NUMCPUS
+time nice make -j"$NUMCPUS" --load-average="$NUMCPUS"
 
 # hook vscode
 KDIR=$(make -f "$SCRIPT_DIR/lib/printvars.mak" -f Makefile print-KDIR)
 
 if [ -f "$KDIR/scripts/clang-tools/gen_compile_commands.py" ]; then
 	# works since 5.10
-	make -C "$KDIR" M=`pwd` compile_commands.json
+	make -C "$KDIR" M="$PWD" compile_commands.json
 else
-	MDIR=$(realpath -e `pwd`)
+	MDIR=$(realpath -e "$PWD")
 	pushd "$KDIR"
 	python3 "$SCRIPT_DIR/lib/gen_compile_commands.py" -o "$MDIR/compile_commands.json" "$MDIR/modules.order"
 	popd

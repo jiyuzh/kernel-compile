@@ -387,4 +387,6 @@ check_flags \
 	BRIDGE_EBT_NFLOG \
 	BPFILTER_UMH
 
+echo
+
 EXITCODE=0

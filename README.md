@@ -32,6 +32,10 @@
 
 2. Reboot
 
+### Kernel List Installed Script
+
+1. Run [where.sh](where.sh): `sudo ./where.sh`
+
 ### Kernel Uninstall Script
 
 1. Run [uninstall.sh](uninstall.sh): `sudo ./uninstall.sh {kernel_version}`
@@ -349,4 +353,3 @@ This script provides the following special global variables and functions:
    :warning: The committed config is for reference only, since module requirements may differ
 
 8. Use build script to compile
-

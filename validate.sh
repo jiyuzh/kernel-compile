@@ -32,7 +32,8 @@ fi
 EXT_ARGS=( "$@" )
 USE_EXTENSION=( $("$SCRIPT_DIR/extension/registry.sh" "$SCRIPT_DIR/extension" "validate" "${EXT_ARGS[@]}") )
 echo "Using configuration extensions: "
-echo "    ${USE_EXTENSION[@]}"
+printf '    %s\n' "${USE_EXTENSION[@]}"
+echo
 
 if ! command -v zgrep > /dev/null 2>&1; then
 	zgrep() {
@@ -50,11 +51,11 @@ is_set_as_module() {
 	zgrep "CONFIG_$1=m" "$CONFIG" > /dev/null
 }
 is_num_eq() {
-	FOUND_VAL=$(cat "$CONFIG" | perl -ne 'print $1 if /^'"CONFIG_$1"'=(.*)$/')
+	FOUND_VAL=$(perl -ne 'print $1 if /^'"CONFIG_$1"'=(.*)$/' < "$CONFIG")
 	zgrep "CONFIG_$1=$2" "$CONFIG" > /dev/null
 }
 is_str() {
-	FOUND_VAL=$(cat "$CONFIG" | perl -ne 'print $1 if /^'"CONFIG_$1"'="(.*)"$/')
+	FOUND_VAL=$(perl -ne 'print $1 if /^'"CONFIG_$1"'="(.*)"$/' < "$CONFIG")
 	zgrep "CONFIG_$1=\"$2\"" "$CONFIG" > /dev/null
 }
 
@@ -185,7 +186,9 @@ check_str() {
 
 check_arch() {
 	local expect="$1"
-	local actual=$(uname -m)
+	local actual
+
+	actual=$(uname -m)
 
 	if [ "$expect" = "$actual" ]; then
 		wrap_good "$expect architecture" 'yes'
@@ -268,10 +271,10 @@ run_validate() {
 	echo
 
 	if [ $EXITCODE -ne 0 ]; then
-		FAILED=$(( $FAILED + 1 ))
+		FAILED=$(( FAILED + 1 ))
 		FAILED_EXT+=( "$name" )
 	else
-		SUCCED=$(( $SUCCED + 1 ))
+		SUCCED=$(( SUCCED + 1 ))
 		SUCCED_EXT+=( "$name" )
 	fi
 }
@@ -298,10 +301,10 @@ fi
 wrap_color "info: reading kernel config from $CONFIG ..." blue
 echo
 
-KERNEL_MAJOR=$(cat "$MAKEFILE" | perl -ne 'if (/^VERSION\s*=\s*(\d+)\s*(?:#.*)?$/) { print $1; $found ||= 1; } }{ print 0 if !$found')
-KERNEL_MINOR=$(cat "$MAKEFILE" | perl -ne 'if (/^PATCHLEVEL\s*=\s*(\d+)\s*(?:#.*)?$/) { print $1; $found ||= 1; } }{ print 0 if !$found')
-KERNEL_PATCH=$(cat "$MAKEFILE" | perl -ne 'if (/^SUBLEVEL\s*=\s*(\d+)\s*(?:#.*)?$/) { print $1; $found ||= 1; } }{ print 0 if !$found')
-KERNEL_EXTRA=$(cat "$MAKEFILE" | perl -ne 'if (/^EXTRAVERSION\s*=\s*(.*?)\s*(?:#.*)?$/) { print $1; }')
+KERNEL_MAJOR=$(perl -ne 'if (/^VERSION\s*=\s*(\d+)\s*(?:#.*)?$/) { print $1; $found ||= 1; } }{ print 0 if !$found' < "$MAKEFILE")
+KERNEL_MINOR=$(perl -ne 'if (/^PATCHLEVEL\s*=\s*(\d+)\s*(?:#.*)?$/) { print $1; $found ||= 1; } }{ print 0 if !$found' < "$MAKEFILE")
+KERNEL_PATCH=$(perl -ne 'if (/^SUBLEVEL\s*=\s*(\d+)\s*(?:#.*)?$/) { print $1; $found ||= 1; } }{ print 0 if !$found' < "$MAKEFILE")
+KERNEL_EXTRA=$(perl -ne 'if (/^EXTRAVERSION\s*=\s*(.*?)\s*(?:#.*)?$/) { print $1; }' < "$MAKEFILE")
 
 wrap_color "info: kernel version is $KERNEL_MAJOR.$KERNEL_MINOR.$KERNEL_PATCH$KERNEL_EXTRA" blue
 echo
@@ -317,16 +320,16 @@ fi
 
 run_post_hooks_slient
 
-TOTAL=$(( $SUCCED + $FAILED ))
+TOTAL=$(( SUCCED + FAILED ))
 echo "Validation Report:"
 echo
 echo "Total $TOTAL / Succeed $SUCCED / Failed $FAILED"
 echo
 echo "Succeed:"
-echo "    ${SUCCED_EXT[@]}"
+printf '    %s\n' "${SUCCED_EXT[@]}"
 echo
 echo "Failed:"
-echo "    ${FAILED_EXT[@]}"
+printf '    %s\n' "${FAILED_EXT[@]}"
 
 if [ "$SUPRESS_ERRNO" = true ]; then
 	exit 0

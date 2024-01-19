@@ -396,4 +396,3 @@ module_flags \
 	BRIDGE_EBT_LOG \
 	BRIDGE_EBT_NFLOG \
 	BPFILTER_UMH
-

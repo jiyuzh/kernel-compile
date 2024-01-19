@@ -10,15 +10,16 @@ source "$SCRIPT_DIR/lib/common.sh"
 
 existing=( $(ls /boot | perl -ne 'print "$1\n" if /^vmlinuz-(.*)(?<!\.old)$/') )
 
-for dir in $(ls /lib/modules); do
+for dir in /lib/modules/*; do
 	installed=0
+
 	for i in "${existing[@]}"; do
-		if [[ "$i" == "$dir" ]]; then
+		if [[ "$i" == "$(basename "$dir")" ]]; then
 			installed=1
 		fi
 	done
 
-	dir=$(realpath -e "/lib/modules/$dir")
+	dir=$(realpath -e "$dir")
 
 	if [ "$installed" -eq 0 ]; then
 		echo "WARNING: Orphaned module directory $dir"

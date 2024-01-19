@@ -12,18 +12,18 @@ hook_at "build"
 run_pre_hooks
 
 # get core count
-NUMCPUS=`grep -c '^processor' /proc/cpuinfo`
+NUMCPUS=$(nproc)
 
 # compile kernel (using all cores)
-time nice make -j$NUMCPUS --load-average=$NUMCPUS
-time nice make modules -j$NUMCPUS --load-average=$NUMCPUS
+time nice make -j"$NUMCPUS" --load-average="$NUMCPUS"
+time nice make modules -j"$NUMCPUS" --load-average="$NUMCPUS"
 
 # prepare gdb
-time nice make scripts_gdb -j$NUMCPUS --load-average=$NUMCPUS
+time nice make scripts_gdb -j"$NUMCPUS" --load-average="$NUMCPUS"
 
 # compile perf
 cd tools/perf
-time nice make -j$NUMCPUS --load-average=$NUMCPUS
+time nice make -j"$NUMCPUS" --load-average="$NUMCPUS"
 cd ../..
 
 # hook vscode

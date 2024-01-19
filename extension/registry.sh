@@ -56,7 +56,9 @@ function add_extension {
 function handle_default {
 	for i in "${HAS_EXTENSION[@]}"
 	do
-		local file_content=$( cat "$i-$TYPE.sh" )
+		local file_content
+
+		file_content=$( cat "$i-$TYPE.sh" )
 
 		if [[ " $file_content " =~ $(echo '#\s*ext-default-enabled\s*:\s*no') ]]; then
 			remove_extension "$i"

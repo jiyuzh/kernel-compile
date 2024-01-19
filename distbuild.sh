@@ -12,15 +12,15 @@ hook_at "build"
 run_pre_hooks
 
 # get core count
-NUMCPUS=`distcc -j`
+NUMCPUS=$(distcc -j)
 
 # compile kernel (using all cores)
-time nice make -j$NUMCPUS CC="distcc"
-time nice make -j$NUMCPUS CC="distcc" modules
+time nice make -j"$NUMCPUS" CC="distcc"
+time nice make -j"$NUMCPUS" CC="distcc" modules
 
 # compile perf
 cd tools/perf
-time nice make -j$NUMCPUS --load-average=$NUMCPUS
+time nice make -j"$NUMCPUS" --load-average="$NUMCPUS"
 cd ../..
 
 # hook vscode
@@ -35,4 +35,3 @@ run_post_hooks
 # success message
 KERNELRELEASE=$(cat include/config/kernel.release 2> /dev/null)
 echo "Kernel ($KERNELRELEASE) compile ready, please install"
-
