@@ -6,6 +6,7 @@
 # Author: Tom Roeder <tmroeder@google.com>
 #
 """A tool for generating compile_commands.json in the Linux kernel."""
+"""This version is modified to work under multiple kernel releases."""
 
 import argparse
 import json
@@ -149,6 +150,7 @@ def cmdfiles_for_modorder(modorder, quirk):
 			# Read from *.mod, to get a list of objects that compose the module.
 			with open(mod) as m:
 				if quirk['space_delim_mod']:
+					# This is copied from the older version of this file in Linux repo
 					for obj in m.readline().split():
 						yield to_cmdfile(obj)
 					return
@@ -216,16 +218,16 @@ def detect_compatibility_mode(kern_directory):
 		'ko_modules_order': True,
 	}
 
-	# After 5.2: .mod file is generated in all module compilation
-	if major > 5 or (major == 5 and minor > 2):
+	# Since 5.3  9f69a49: .mod file is generated in all module compilation
+	if major > 5 or (major == 5 and minor >= 3):
 		quirk['possible_no_mod'] = False
 
-	# After 5.18: .mod file use new line as delimiter instead of space
-	if major > 5 or (major == 5 and minor > 18):
+	# Since 5.19 9413e76: .mod file use new line as delimiter instead of space
+	if major > 5 or (major == 5 and minor >= 19):
 		quirk['space_delim_mod'] = False
 
-	# After 6.1: change module.order to list *.o instead of *.ko
-	if major > 6 or (major == 6 and minor > 1):
+	# Since 6.2  f65a486: change module.order to list *.o instead of *.ko
+	if major > 6 or (major == 6 and minor >= 2):
 		quirk['ko_modules_order'] = False
 
 	print(quirk)
@@ -246,6 +248,8 @@ def main():
 	compile_commands = []
 
 	for path in paths:
+		# Without .mod, we can not generate file list from modules.order
+		# So just fallback to use the directory mode
 		if quirk['possible_no_mod'] and path.endswith('modules.order'):
 			path = os.path.realpath(os.path.dirname(path))
 
