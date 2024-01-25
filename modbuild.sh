@@ -18,7 +18,7 @@ NUMCPUS=$(nproc)
 time nice make -j"$NUMCPUS" --load-average="$NUMCPUS"
 
 # hook vscode
-KDIR=$(make -f "$SCRIPT_DIR/lib/printvars.mak" -f Makefile print-KDIR)
+KDIR="$(make -f "$SCRIPT_DIR/lib/printvars.mak" -f Makefile print-KDIR)"
 
 if [ -f "$KDIR/scripts/clang-tools/gen_compile_commands.py" ]; then
 	# works since 5.10
