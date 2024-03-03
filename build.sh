@@ -18,12 +18,22 @@ NUMCPUS=$(nproc)
 time nice make -j"$NUMCPUS" --load-average="$NUMCPUS"
 time nice make modules -j"$NUMCPUS" --load-average="$NUMCPUS"
 
+# now we can know the name of the kernel
+KERNELRELEASE=$(make -s kernelrelease 2> /dev/null)
+if [ -z "$KERNELRELEASE" ]; then
+	KERNELRELEASE=$(cat include/config/kernel.release 2> /dev/null)
+fi
+
 # prepare gdb
 time nice make scripts_gdb -j"$NUMCPUS" --load-average="$NUMCPUS"
 
 # compile perf
 cd tools/perf
 time nice make -j"$NUMCPUS" --load-average="$NUMCPUS"
+
+# install perf
+sudo mkdir -p "/usr/lib/linux-tools/$KERNELRELEASE/"
+sudo ln -sf "$(realpath -e perf)" "/usr/lib/linux-tools/$KERNELRELEASE/perf"
 cd ../..
 
 # hook vscode
@@ -37,5 +47,4 @@ fi
 run_post_hooks
 
 # success message
-KERNELRELEASE=$(cat include/config/kernel.release 2> /dev/null)
 echo "Kernel ($KERNELRELEASE) compile ready, please install"
