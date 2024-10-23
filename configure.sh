@@ -108,14 +108,14 @@ set_flag_num() {
 }
 
 kern_ver_ge() {
-	if [ "$KERNEL_MAJOR" -lt "$1" ]; then
-		false
-	elif [ "$#" -ge 2 ] && [ "$KERNEL_MINOR" -lt "$2" ]; then
-		false
-	elif [ "$#" -ge 3 ] && [ "$KERNEL_PATCH" -lt "$3" ]; then
-		false
-	elif [ "$#" -ge 4 ] && [[ "$KERNEL_EXTRA" == "-rc"* ]] && [[ "$4" == "-rc"* ]] && [[ "$KERNEL_EXTRA" < "$4" ]]; then
-		false
+	if [ "$KERNEL_MAJOR" -ne "$1" ]; then
+		[ "$KERNEL_MAJOR" -gt "$1" ]
+	elif [ "$#" -ge 2 ] && [ "$KERNEL_MINOR" -ne "$2" ]; then
+		[ "$KERNEL_MINOR" -gt "$1" ]
+	elif [ "$#" -ge 3 ] && [ "$KERNEL_PATCH" -ne "$3" ]; then
+		[ "$KERNEL_PATCH" -gt "$1" ]
+	elif [ "$#" -ge 4 ] && [[ "$KERNEL_EXTRA" == "-rc"* ]] && [[ "$4" == "-rc"* ]]; then
+		[[ "$KERNEL_EXTRA" > "$4" ]]
 	else
 		true
 	fi
